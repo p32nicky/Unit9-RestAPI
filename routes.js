@@ -4,7 +4,10 @@ const express = require('express');
 
 // Construct a router instance.
 const router = express.Router();
-const {Users, Courses} = require('./models');
+const { Users }  = require('./models');
+const { Courses } = require('./models');
+
+
 
 // Handler function to wrap each route.
 function asyncHandler(cb) {
