@@ -4,8 +4,8 @@ const express = require('express');
 
 // Construct a router instance.
 const router = express.Router();
-const { Users }  = require('./models');
-const { Courses } = require('./models');
+const { User }  = require('./models');
+const { Course } = require('./models');
 
 
 
@@ -28,7 +28,7 @@ router.get('/users', asyncHandler(async (req, res) => {
 }));
 
 router.get('/courses', asyncHandler(async (req, res) => {
-  let courses = await User.findAll();
+  let courses = await Course.findAll();
   res.json(courses);
 }));
 
