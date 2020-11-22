@@ -55,11 +55,11 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 ////ADD COURSE POST
 router.post('/courses', asyncHandler( async (req, res, next)=>{
     try{
-      await Course.create(req.body);
-        res.status(201).location(`/courses/${course.id}`).json({ "message": "Account successfully created!" }).end();
+      const course = await Course.create(req.body);
+      res.status(201).location(`/courses/${course.id}`).json({ "message": "Account successfully created!" }).end();
 
     } catch (error){
-        res.status(400).json({message: "Course Title and Description required."});
+      res.status(400).json({message: "Course Title and Description required."});
     }
 }));
 
