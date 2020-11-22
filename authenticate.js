@@ -3,7 +3,7 @@ const auth = require('basic-auth');
 const bcrypt = require('bcryptjs');
 const { User } = require('./models');
 
-exports.authenticateUser = async (req, res, next) => {
+exports.authUser = async (req, res, next) => {
   let message = null;
 
   // Parse the user's credentials from the Authorization header.
@@ -26,20 +26,20 @@ exports.authenticateUser = async (req, res, next) => {
 
       // If the passwords match...
       if (authenticated) {
-        console.log(`Authentication successful for user: ${user.firstName}`);
+        console.log(`Authentication successful for user: ${credentials.name}`);
 
         // Then store the retrieved user object on the request object
         // so any middleware functions that follow this middleware function
         // will have access to the user's information.
         req.currentUser = user;
       } else {
-        message = `Authentication failure for user: ${user.firstName}`;
+        message = `Authentication failure for user: ${credentials.name}`;
       }
     } else {
-      message = `User not found for user: ${user.firstName}`;
+      message = `User not found for user: ${credentials.name}`;
     }
   } else {
-    message = 'Auth header not found';
+    message = 'Auth not found';
   }
 
   // If user authentication failed...
