@@ -1,6 +1,5 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
-const bcrypt = require('bcrypt');
 
 module.exports = (sequelize) => {
   class User extends Model {}
@@ -67,7 +66,7 @@ module.exports = (sequelize) => {
         }
       }
     },
-  /*  confirmedPassword: {
+  /*confirmedPassword: {
       type: DataTypes.STRING,
       allowNull: false,
       set(val){
@@ -83,6 +82,14 @@ module.exports = (sequelize) => {
       }
   *///  }
   }, { sequelize });
-
+  User.associate = (models) => {
+      User.hasMany(models.Course, {
+//        as: 'student', // alias
+          foreignKey: {
+            fieldName: 'userId',
+            allowNull: false,
+          },
+      });
+    };
   return User;
 };

@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const { User }  = require('./models');
 const { Course } = require('./models');
+const { authUser } = require('./authenticate');
 
 
 
@@ -22,21 +23,31 @@ function asyncHandler(cb) {
 }
 
 // Route that returns a list of users.
-router.get('/users', asyncHandler(async (req, res) => {
-  let users = await User.findAll();
-  res.json(users);
+router.get('/users', authUser, asyncHandler(async (req, res) => {
+  const user = req.currentUser;
+
+  res.json({
+    name: user.name,
+    username: user.username,
+  });
 }));
+
+  //let users = await User.findAll();
+  //res.json(users);
+//}));
 
 router.get('/courses', asyncHandler(async (req, res) => {
   let courses = await Course.findAll();
   res.json(courses);
 }));
 
+
+
 // Route that creates a new user.
 router.post('/users', asyncHandler(async (req, res) => {
   try {
     await User.create(req.body);
-    res.status(201).json({ "message": "Account successfully created!" });
+    res.status(201).json({ "message": "User successfully created!" });
   } catch (error) {
     console.log('ERROR: ', error.name);
 

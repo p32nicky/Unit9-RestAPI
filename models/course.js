@@ -38,6 +38,14 @@ module.exports = (sequelize, DataTypes) => {
     estimatedTime: DataTypes.STRING,
     materialsNeeded: DataTypes.STRING,
   }, { sequelize });
-
+  Course.associate = (models) => {
+      Course.belongsTo(models.User, {
+//        as: 'student', // alias
+          foreignKey: {
+            fieldName: 'userId',
+            allowNull: false,
+          },
+      });
+    };
   return Course;
 };
