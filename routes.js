@@ -7,6 +7,8 @@ const router = express.Router();
 const { User }  = require('./models');
 const { Course } = require('./models');
 const { authUser } = require('./authenticate');
+const bcrypt = require('bcrypt');
+const hashedPassword = bcrypt.hashSync();
 
 
 
@@ -56,11 +58,18 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 router.post('/courses', asyncHandler( async (req, res, next)=>{
     try{
       const course = await Course.create(req.body);
-      res.status(201).location(`/courses/${course.id}`).json({ "message": "Account successfully created!" }).end();
+      res.status(201).location(`/courses/${course.id}`).json({ "message": "Course successfully created!" }).end();
 
-    } catch (error){
-      res.status(400).json({message: "Course Title and Description required."});
-    }
+    }catch (error) {
+        console.log('ERROR: ', error.name);
+
+        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+          const errors = error.errors.map(err => err.message);
+          res.status(400).json({ errors });
+        } else {
+          throw error;
+        }
+      }
 }));
 
 // Send a PUT request to /couse/:id to UPDATE (edit) a quote
@@ -84,8 +93,13 @@ router.delete("/courses/:id", asyncHandler(async(req,res, next) => {
 // Route that creates a new user.
 router.post('/users', asyncHandler(async (req, res) => {
   try {
-    await User.create(req.body);
-    res.status(201).json({ "message": "User successfully created!" });
+    const reqBody = req.body;
+    if(reqBody.password){
+      reqBody.password = bcrypt.hashSync(reqBody.password, 10, salt)
+      await User.create(req.body);
+      res.status(201).json({ "message": "User successfully created!" });
+    }
+
   } catch (error) {
     console.log('ERROR: ', error.name);
 
