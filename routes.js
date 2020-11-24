@@ -95,7 +95,7 @@ router.post('/users', asyncHandler(async (req, res) => {
   try {
     const reqBody = req.body;
     if(reqBody.password){
-      reqBody.password = bcrypt.hashSync(reqBody.password, 10, salt)
+      reqBody.password = bcrypt.hashSync(reqBody.password, 10)
       await User.create(req.body);
       res.status(201).json({ "message": "User successfully created!" });
     }
