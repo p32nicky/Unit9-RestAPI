@@ -7,8 +7,7 @@ const router = express.Router();
 const { User }  = require('./models');
 const { Course } = require('./models');
 const { authUser } = require('./authenticate');
-const bcrypt = require('bcrypt');
-const hashedPassword = bcrypt.hashSync();
+const bcryptjs = require('bcryptjs');
 
 
 
@@ -55,7 +54,7 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
 
 ////ADD COURSE POST
-router.post('/courses', asyncHandler( async (req, res, next)=>{
+router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
     try{
       const course = await Course.create(req.body);
       res.status(201).location(`/courses/${course.id}`).json({ "message": "Course successfully created!" }).end();
@@ -73,7 +72,7 @@ router.post('/courses', asyncHandler( async (req, res, next)=>{
 }));
 
 // Send a PUT request to /couse/:id to UPDATE (edit) a quote
-router.put('/courses/:id', asyncHandler(async(req,res) => {
+router.put('/courses/:id', authUser, asyncHandler(async(req,res) => {
     const course = await Course.findByPk(req.params.id);
     if(course){
         await course.update(req.body);
@@ -84,7 +83,7 @@ router.put('/courses/:id', asyncHandler(async(req,res) => {
 }));
 
 //DELETE COURSE - ADD USER AUTH
-router.delete("/courses/:id", asyncHandler(async(req,res, next) => {
+router.delete("/courses/:id", authUser, asyncHandler(async(req,res, next) => {
     const course = await Course.findByPk(req.params.id);
     await course.destroy(course);
     res.status(204).end();
@@ -93,12 +92,11 @@ router.delete("/courses/:id", asyncHandler(async(req,res, next) => {
 // Route that creates a new user.
 router.post('/users', asyncHandler(async (req, res) => {
   try {
-    const reqBody = req.body;
-    if(reqBody.password){
-      reqBody.password = bcrypt.hashSync(reqBody.password, 10)
-      await User.create(req.body);
-      res.status(201).json({ "message": "User successfully created!" });
+    if(req.body.password){
+      req.body.password = bcryptjs.hashSync(req.body.password, 10);
     }
+    await User.create(req.body);
+    res.status(201).json({ "message": "User successfully created!" });
 
   } catch (error) {
     console.log('ERROR: ', error.name);

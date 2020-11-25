@@ -39,7 +39,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
       unique: {
-        msg: "The email you entered already exists"
+        msg: "The email you entered already exists",
       },
       validate: {
         notNull: {
@@ -51,7 +51,7 @@ module.exports = (sequelize) => {
       }
     },
     password: {
-      type: DataTypes.VIRTUAL,
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notNull: {
@@ -60,10 +60,10 @@ module.exports = (sequelize) => {
         notEmpty:{
           msg: "Please provide password"
         },
-        len: {
-          args: [8, 20],
-          msg: "Your password isn't long enough"
-        }
+        // len: {
+        //   args: [8, 20],
+        //   msg: "Your password isn't long enough"
+        // }
       }
     },
   /*confirmedPassword: {
