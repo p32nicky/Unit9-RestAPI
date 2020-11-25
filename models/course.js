@@ -1,6 +1,7 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
 
+//Mainly copied from projects in unit 9 for model validation and requirements
 module.exports = (sequelize, DataTypes) => {
   class Course extends Model {}
   Course.init({

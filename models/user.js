@@ -1,6 +1,8 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
 
+//Mainly copied from projects in unit 9 for model validation and requirements
+
 module.exports = (sequelize) => {
   class User extends Model {}
   User.init({
@@ -51,7 +53,7 @@ module.exports = (sequelize) => {
       }
     },
     password: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING, //changed from virtual to string
       allowNull: false,
       validate: {
         notNull: {
@@ -81,6 +83,8 @@ module.exports = (sequelize) => {
         }
       }
   *///  }
+
+  //Assign association
   }, { sequelize });
   User.associate = (models) => {
       User.hasMany(models.Course, {

@@ -1,15 +1,11 @@
 'use strict';
 
 const express = require('express');
-
-// Construct a router instance.
 const router = express.Router();
 const { User }  = require('./models');
 const { Course } = require('./models');
-const { authUser } = require('./authenticate');
+const { authUser } = require('./authenticate'); //User authentication Middleware
 const bcryptjs = require('bcryptjs');
-
-
 
 // Handler function to wrap each route.
 function asyncHandler(cb) {
@@ -23,7 +19,7 @@ function asyncHandler(cb) {
   }
 }
 
-// Route that returnsfrom authenticate
+// Route that returns users after Authorization
 router.get('/users', authUser, asyncHandler(async (req, res) => {
   const user = req.currentUser;
   res.json({
@@ -33,31 +29,33 @@ router.get('/users', authUser, asyncHandler(async (req, res) => {
     email: user.emailAddress
   });
 }));
-
   //let users = await User.findAll();
   //res.json(users);
 //}));
 
-router.get('/courses', asyncHandler(async (req, res) => {
-  let courses = await Course.findAll();
+//Route Get all courses and include courses model info
+router.get('/courses', asyncHandler(async (req, res, next) => {
+  let courses = await Course.findAll({ include:[{ model: User, attributes: ['firstName', 'lastName', 'emailAddress', 'id']}]
+});
   res.json(courses);
 }));
 
+//Route get course by ID and include model course info
 router.get('/courses/:id', asyncHandler(async (req, res) => {
-  let course = await Course.findByPk(req.params.id);
+  let course = await Course.findByPk(req.params.id, { include:[{ model: User, attributes: ['firstName', 'lastName', 'emailAddress', 'id' ]}]
+});
   if (course){
     res.json(course);
   } else {
-        res.status(404).json({message: "Course not found."});
-    }
+      res.status(404).json({message: "Course not found."});
+  }
 }));
 
-
-////ADD COURSE POST
+//Route post new course and set location
 router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
     try{
       const course = await Course.create(req.body);
-      res.status(201).location(`/courses/${course.id}`).json({ "message": "Course successfully created!" }).end();
+      res.status(201).location(`/api/courses/${course.id}`).end();
 
     }catch (error) {
         console.log('ERROR: ', error.name);
@@ -71,18 +69,33 @@ router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
       }
 }));
 
-// Send a PUT request to /couse/:id to UPDATE (edit) a quote
+//Route to send a PUT request to /couse/:id to UPDATE (edit) a course
 router.put('/courses/:id', authUser, asyncHandler(async(req,res) => {
-    const course = await Course.findByPk(req.params.id);
-    if(course){
-        await course.update(req.body);
-        res.status(204).end();
-    } else {
-        res.status(404).json({message: "Course Not Found"});
+  try{
+    const course = await Course.findByPK(req.params.id);
+    res.status(204).end();
+
+  }catch (error) {
+      console.log('ERROR: ', error.name);
+
+      if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+        const errors = error.errors.map(err => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error;
+      }
     }
+
+    // const course = await Course.findByPk(req.params.id);
+    // if(course){
+    //     await course.update(req.body);
+    //     res.status(204).end();
+    // } else {
+    //     res.status(404).json({message: "Course Not Found"});
+    // }
 }));
 
-//DELETE COURSE - ADD USER AUTH
+//Route to delete a course
 router.delete("/courses/:id", authUser, asyncHandler(async(req,res, next) => {
     const course = await Course.findByPk(req.params.id);
     await course.destroy(course);
@@ -90,13 +103,14 @@ router.delete("/courses/:id", authUser, asyncHandler(async(req,res, next) => {
 }));
 
 // Route that creates a new user.
+//Checks if req.body has a password and then hashes it and assigns to self
 router.post('/users', asyncHandler(async (req, res) => {
   try {
     if(req.body.password){
       req.body.password = bcryptjs.hashSync(req.body.password, 10);
     }
     await User.create(req.body);
-    res.status(201).json({ "message": "User successfully created!" });
+    res.status(201).location(`/${req.body.id}`).end();
 
   } catch (error) {
     console.log('ERROR: ', error.name);
