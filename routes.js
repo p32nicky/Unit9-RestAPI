@@ -72,7 +72,7 @@ router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
 //Route to send a PUT request to /couse/:id to UPDATE (edit) a course
 router.put('/courses/:id', authUser, asyncHandler(async(req,res) => {
   try{
-    const course = await Course.findByPK(req.params.id);
+    const course = await Course.findByPk(req.params.id);
     res.status(204).end();
 
   }catch (error) {
@@ -110,7 +110,7 @@ router.post('/users', asyncHandler(async (req, res) => {
       req.body.password = bcryptjs.hashSync(req.body.password, 10);
     }
     await User.create(req.body);
-    res.status(201).location(`/${req.body.id}`).end();
+    res.status(201).location(`/`).end();
 
   } catch (error) {
     console.log('ERROR: ', error.name);
