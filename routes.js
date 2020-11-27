@@ -73,18 +73,28 @@ router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
 router.put('/courses/:id', authUser, asyncHandler(async(req,res) => {
   try{
     const course = await Course.findByPk(req.params.id);
+    const putBody = req.body;
+    const errorsHand = [];
     res.status(204).end();
 
-  }catch (error) {
+  }catch (errorHand) {
       console.log('ERROR: ', error.name);
 
-      if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-        const errors = error.errors.map(err => err.message);
-        res.status(400).json({ errors });
-      } else {
-        throw error;
+      if(!putBody.title){
+        errorHand.push("You need a title");
       }
+      if(!putBody.description){
+        errorHand.push("You need a description");
+      }
+
+        if (errorHand.name === 'SequelizeValidationError' || errorHand.name === 'SequelizeUniqueConstraintError') {
+          const errors = error.errors.map(err => err.message);
+          res.status(400).json({ errors });
+        } else {
+          throw error;
+        }
     }
+
 
     // const course = await Course.findByPk(req.params.id);
     // if(course){
