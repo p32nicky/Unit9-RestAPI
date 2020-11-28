@@ -6,6 +6,7 @@ const { User }  = require('./models');
 const { Course } = require('./models');
 const { authUser } = require('./authenticate'); //User authentication Middleware
 const bcryptjs = require('bcryptjs');
+const { check } = require('express-validator');
 
 // Handler function to wrap each route.
 function asyncHandler(cb) {
@@ -70,31 +71,26 @@ router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
 }));
 
 //Route to send a PUT request to /couse/:id to UPDATE (edit) a course
-router.put('/courses/:id', authUser, asyncHandler(async(req,res) => {
+router.put('/courses/:id', authUser, [
+    check('title').isLength({min: 2}),
+    check('description').isLength({min: 2})
+
+  ], asyncHandler(async(req,res, next) => {
   try{
     const course = await Course.findByPk(req.params.id);
-    const putBody = req.body;
-    const errorsHand = [];
     res.status(204).end();
 
-  }catch (errorHand) {
+  }catch (error) {
       console.log('ERROR: ', error.name);
 
-      if(!putBody.title){
-        errorHand.push("You need a title");
+      if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+        const errors = error.errors.map(err => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error;
       }
-      if(!putBody.description){
-        errorHand.push("You need a description");
-      }
-
-        if (errorHand.name === 'SequelizeValidationError' || errorHand.name === 'SequelizeUniqueConstraintError') {
-          const errors = error.errors.map(err => err.message);
-          res.status(400).json({ errors });
-        } else {
-          throw error;
-        }
     }
-
+  }));
 
     // const course = await Course.findByPk(req.params.id);
     // if(course){
@@ -103,7 +99,7 @@ router.put('/courses/:id', authUser, asyncHandler(async(req,res) => {
     // } else {
     //     res.status(404).json({message: "Course Not Found"});
     // }
-}));
+
 
 //Route to delete a course
 router.delete("/courses/:id", authUser, asyncHandler(async(req,res, next) => {
