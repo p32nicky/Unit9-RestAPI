@@ -6,7 +6,7 @@ const { User }  = require('./models');
 const { Course } = require('./models');
 const { authUser } = require('./authenticate'); //User authentication Middleware
 const bcryptjs = require('bcryptjs');
-const { check, validationResult } = require('express-validator');
+const { check, validationResult } = require('express-validator'); //Checks for inputs on put route
 
 // Handler function to wrap each route.
 function asyncHandler(cb) {
@@ -46,60 +46,44 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
 //Route post new course and set location
 router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
-    try{
-      const course = await Course.create(req.body);
-      res.status(201).location(`/api/courses/${course.id}`).end();
+  try{
+    const course = await Course.create(req.body);
+    res.status(201).location(`/api/courses/${course.id}`).end();
 
-    }catch (error) {
-        console.log('ERROR: ', error.name);
+  }catch (error) {
+    console.log('ERROR: ', error.name);
 
-        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-          const errors = error.errors.map(err => err.message);
-          res.status(400).json({ errors });
-        } else {
-          throw error;
-        }
-      }
+    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+      const errors = error.errors.map(err => err.message);
+      res.status(400).json({ errors });
+    } else {
+      throw error;
+    }
+  }
 }));
 
 //Route to send a PUT request to /couse/:id to UPDATE (edit) a course
-router.put('/courses/:id', [
+//Checks title and description are not empty with express validator
+router.put('/courses/:id',  [
     check('title').not().isEmpty().withMessage("Title is not long enough"),
     check('description').not().isEmpty().withMessage("Description is not long enough"),
-], asyncHandler(async(req,res) => {
+], authUser, asyncHandler(async(req,res, next) => {
+  const errors = validationResult(req);
+  const course = await Course.findByPk(req.params.id);
 
-  try{
-    const course = await Course.findByPk(req.params.id);
-    if (course) {
-      if (course.userId === req.id) {
-        const errors = validationResult(req);
-          if (!errors.isEmpty()) {
-            await course.update(req.body);
-            res.status(204).end(); // Success
-          }
-      } else {
-        res.status(403).json({"Error" : "You are not authorized to edit this courese"})//Not Auth
-      }
-    }
-  } catch (error) {
-      //console.log('ERROR: ', error.name);
-      if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-        const errors = error.errors.map(err => err.message);
-        res.status(400).json({ errors });
-      } else {
-        throw error;
-      }
-    }
-  }))
+//If errors are not empty
+  if (!errors.isEmpty()) {
+    const errorArray = errors.array();
+    const message = errorArray.map(err => err.message);
+    res.status(400).json({errors: errors.array()}).end();
+  }
 
-    // const course = await Course.findByPk(req.params.id);
-    // if(course){
-    //     await course.update(req.body);
-    //     res.status(204).end();
-    // } else {
-    //     res.status(404).json({message: "Course Not Found"});
-    // }
-
+//Success and update
+  else {
+    course.update(req.body)
+    return res.status(204).end();
+  }
+}));
 
 //Route to delete a course
 router.delete("/courses/:id", authUser, asyncHandler(async(req,res, next) => {
