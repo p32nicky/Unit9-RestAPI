@@ -6,7 +6,7 @@ const { User }  = require('./models');
 const { Course } = require('./models');
 const { authUser } = require('./authenticate'); //User authentication Middleware
 const bcryptjs = require('bcryptjs');
-const { check, validator } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 
 // Handler function to wrap each route.
 function asyncHandler(cb) {
@@ -70,8 +70,9 @@ router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
       }
 }));
 
+//Route to send a PUT request to /couse/:id to UPDATE (edit) a course
 //Route to send a PUT request to /course/:id to UPDATE (edit) a course
-router.put('/courses/:id', authUser, [
+router.put('/courses/:id', [
     check('title').not().isEmpty().withMessage("Title is not long enough"),
     check('description').not().isEmpty().withMessage("Description is not long enough"),
 ], asyncHandler(async(req,res) => {
@@ -79,13 +80,13 @@ router.put('/courses/:id', authUser, [
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ errors });
   }
 
   try{
     const course = await Course.findByPk(req.params.id);
     if (course) {
-      if (course.userId === req.currentUser.id) {
+      if (course.userId === user.id) {
         await course.update(req.body);
         res.status(204).end();
       } else {
