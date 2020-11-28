@@ -22,17 +22,9 @@ function asyncHandler(cb) {
 
 // Route that returns users after Authorization
 router.get('/users', authUser, asyncHandler(async (req, res) => {
-  const user = req.currentUser;
-  res.json({
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.emailAddress
-  });
+  let users = await User.findAll();
+  res.json(users);
 }));
-  //let users = await User.findAll();
-  //res.json(users);
-//}));
 
 //Route Get all courses and include courses model info
 router.get('/courses', asyncHandler(async (req, res, next) => {
@@ -71,34 +63,25 @@ router.post('/courses', authUser, asyncHandler( async (req, res, next)=>{
 }));
 
 //Route to send a PUT request to /couse/:id to UPDATE (edit) a course
-//Route to send a PUT request to /course/:id to UPDATE (edit) a course
 router.put('/courses/:id', [
     check('title').not().isEmpty().withMessage("Title is not long enough"),
     check('description').not().isEmpty().withMessage("Description is not long enough"),
 ], asyncHandler(async(req,res) => {
 
-  const errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors });
-  }
-
   try{
     const course = await Course.findByPk(req.params.id);
     if (course) {
-      if (course.userId === user.id) {
-        await course.update(req.body);
-        res.status(204).end();
+      if (course.userId === req.id) {
+        const errors = validationResult(req);
+          if (!errors.isEmpty()) {
+            await course.update(req.body);
+            res.status(204).end(); // Success
+          }
       } else {
-        res.status(403).end();
+        res.status(403).json({"Error" : "You are not authorized to edit this courese"})//Not Auth
       }
-    } else {
-      const error = new Error('Course does not exist. Try again');
-      error.status = 404;
-      throw error;
     }
-
-  }catch (error) {
+  } catch (error) {
       //console.log('ERROR: ', error.name);
       if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
         const errors = error.errors.map(err => err.message);
@@ -107,7 +90,7 @@ router.put('/courses/:id', [
         throw error;
       }
     }
-  }));
+  }))
 
     // const course = await Course.findByPk(req.params.id);
     // if(course){
